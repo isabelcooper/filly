@@ -1,8 +1,5 @@
-import * as puppeteer from 'puppeteer';
 
-const takeScreenshot = async () => {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+export const takeScreenshot = async (page) => {
     await page.goto('https://airtable.com/shri36qqm4SB9dTTC');
     await page.waitForSelector(".formName");
     await page.type(".col-12.line-height-4","hello");
@@ -15,7 +12,4 @@ const takeScreenshot = async () => {
     await page.click(".submitButton");
     await page.screenshot({path: "third.png"});
     await page.close();
-    await browser.close();
 };
-
-takeScreenshot();
