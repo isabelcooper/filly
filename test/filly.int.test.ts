@@ -1,5 +1,5 @@
-import * as puppeteer from "puppeteer";
-import { takeScreenshot } from "../src/filly";
+import puppeteer from 'puppeteer';
+import {MakersFormFiller} from "../src/filly";
 
 function parseFormParams(requestBody: string) {
   const relevantString = requestBody.split(`name="file"`)[1].split("--")[0];
@@ -12,17 +12,21 @@ describe('Filly', () => {
         const page = await browser.newPage();
         await page.setRequestInterception(true);
         let requestBody = "";
-        page.on('request', (interceptedReq) =>{
+        page.on('request', (interceptedReq: any) =>{
             if (interceptedReq.url() === "https://airtable-inbound-production.s3.amazonaws.com/") {
-              requestBody = interceptedReq.postData()
+                const postData = interceptedReq.postData() ?  interceptedReq.postData() as string : "";
+              requestBody = postData
             }
             interceptedReq.continue()
         });
-        await takeScreenshot(page);
+        const formFiller = new MakersFormFiller(page);
+        await formFiller.fillAndSubmit('https://airtable.com/shri36qqm4SB9dTTC', "Tom");
         await browser.close();
         const parsedParams = parseFormParams(requestBody);
-        expect(parsedParams).toEqual({ fldyWzC1p5jzDzWPs: 'hello',
+        // await this.page.close();
+        expect(parsedParams).toEqual({ fldyWzC1p5jzDzWPs: 'Tom',
         fldkdY4SoeqSLjMJ7: '2019-09-05T00:00:00.000Z',
         fldM0AU0NqHM2UgcS: 'seli3qiIewebEMoik' })
+
     });
 });
