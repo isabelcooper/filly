@@ -1,4 +1,5 @@
 import {Page} from "puppeteer";
+import {format} from "@bodar/totallylazy/dates";
 
 
 interface FormFiller {
@@ -21,18 +22,15 @@ export class MakersFormFiller implements FormFiller {
     // await this.page.goto(url);
     // await this.page.waitForSelector(".formName");
 
-    await this.page.type(".date.truncate.px1","9/5/2019");
-
     await this.selectOptions();
     await this.page.click(".submitButton");
 
     return
   }
 
-  private async selectOptions() {
+  public async selectOptions() {
     await this.page.evaluate((async () => {
       const inputElements = document.querySelectorAll(".cellContainer>.formCell");
-
       const optionsArray = Array.from(inputElements).filter((selectElement) => {
           const potentialSelect = selectElement as HTMLSelectElement;
           return potentialSelect.dataset.columntype === "select"
@@ -50,4 +48,10 @@ export class MakersFormFiller implements FormFiller {
   public async fillName(name: string) {
     await this.page.type(".col-12.line-height-4", name);
   }
+
+  public async fillDate() {
+    const dateToday = format(new Date(), "en", "dd/MM/yyyy");
+    await this.page.type(".date.truncate.px1", dateToday);
+  }
+
 }
