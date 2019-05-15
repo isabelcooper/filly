@@ -6,14 +6,21 @@ interface FormFiller {
 
 }
 
+export type evalFunction = () => void
+
+export interface NewPageType {
+  type(selector: string, value: string): void;
+  click(selector: string): void;
+  evaluate(evaluateFunction: evalFunction): void
+}
+
 export class MakersFormFiller implements FormFiller {
-    constructor( private page: Page){}
+    constructor( private page: NewPageType){}
 
   public async fillAndSubmit(url: string, name: string): Promise<void> {
-    await this.page.goto(url);
-    await this.page.waitForSelector(".formName");
+    // await this.page.goto(url);
+    // await this.page.waitForSelector(".formName");
 
-    await this.page.type(".col-12.line-height-4", name);
     await this.page.type(".date.truncate.px1","9/5/2019");
 
     await this.selectOptions();
@@ -38,5 +45,9 @@ export class MakersFormFiller implements FormFiller {
       });
 
     }));
+  }
+
+  public async fillName(name: string) {
+    await this.page.type(".col-12.line-height-4", name);
   }
 }

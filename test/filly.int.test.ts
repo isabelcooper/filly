@@ -1,32 +1,40 @@
-import puppeteer from 'puppeteer';
-import {MakersFormFiller} from "../src/filly";
+import {evalFunction, MakersFormFiller, NewPageType} from "../src/filly";
+import {JSDOM} from 'jsdom';
+import {airtableHTML} from "./fakeHTML/airtableHTML";
 
-function parseFormParams(requestBody: string) {
-  const relevantString = requestBody.split(`name="file"`)[1].split("--")[0];
-  return JSON.parse(relevantString).cellValuesByColumnId;
+
+export class JsdomTranslator implements NewPageType {
+
+  constructor(private pageObject: JSDOM ) {
+  }
+  
+  click(selector: string): void {
+    const selectElement = this.pageObject.window.document.querySelector(selector) as HTMLSelectElement;
+    selectElement.click()
+  }
+
+  evaluate(evaluateFunction: evalFunction): void {
+    this.pageObject.window.eval(`${evaluateFunction}`)
+  }
+
+  type(selector: string, value: string): void {
+    const inputElement = this.pageObject.window.document.querySelector(selector) as HTMLInputElement;
+    inputElement.value = value
+  }
+
+  querySelector(selector: string): HTMLElement | null {
+    return this.pageObject.window.document.querySelector(selector)
+  }
+
 }
 
-describe('Filly', () => {
-    it('sends request to airtable', async() => {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        await page.setRequestInterception(true);
-        let requestBody = "";
-        page.on('request', (interceptedReq: any) =>{
-            if (interceptedReq.url() === "https://airtable-inbound-production.s3.amazonaws.com/") {
-                const postData = interceptedReq.postData() ?  interceptedReq.postData() as string : "";
-              requestBody = postData
-            }
-            interceptedReq.continue()
-        });
-        const formFiller = new MakersFormFiller(page);
-        await formFiller.fillAndSubmit('https://airtable.com/shri36qqm4SB9dTTC', "Tom");
-        await browser.close();
-        const parsedParams = parseFormParams(requestBody);
-        // await this.page.close();
-        expect(parsedParams).toEqual({ fldyWzC1p5jzDzWPs: 'Tom',
-        fldkdY4SoeqSLjMJ7: '2019-09-05T00:00:00.000Z',
-        fldM0AU0NqHM2UgcS: 'seli3qiIewebEMoik' })
 
+describe('Filly', () => {
+    it('it can fill in the name of the user', async() => {
+      const page = new JsdomTranslator(new JSDOM(airtableHTML));
+      const testFormFiller = new MakersFormFiller(page);
+      await testFormFiller.fillName("Tom");
+      // @ts-ignore
+      expect(page.querySelector(".col-12.line-height-4").value).toEqual("Tom")
     });
 });
